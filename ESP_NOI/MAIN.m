@@ -47,13 +47,9 @@ lambda0 = [lambda0s; lambda0s; 0; 0];
 
 Cf = (FzW(1)+FzW(2))*Partial_mu_long(1,0); %cornering stiffness front     partial_mu_long derivata parziale rispetto a beta
 Cr = (FzW(3)+FzW(4))*Partial_mu_long(1,0); % rear
-A11 = -(Cf+Cr)/(m*v0);
-A12 = -v0-(Cf*rxf+Cr*rxr)/(m*v0);
-A21 = -(Cf*rxf+Cr*rxr)/(Iz*v0);
-A22 = -(Cf*rxf^2+Cr*rxr^2)/(Iz*v0);
 
-A = [A11 A12
-    A21 A22];
+A = [-(Cf+Cr)/(m*v0) -v0-(Cf*rxf+Cr*rxr)/(m*v0)
+    -(Cf*rxf+Cr*rxr)/(Iz*v0) -(Cf*rxf^2+Cr*rxr^2)/(Iz*v0)];
 B1_delta = Cf*[1/m;
       rxf/Iz];
 B1_lambda = [1/m 1/Iz]*[zeros(1,4) Cr;

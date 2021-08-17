@@ -12,7 +12,7 @@ Cyb = -0.3; % [-] drag coefficient
 rk = 1; % dry asphalt
 m = 1200; % [kg] vehicle mass
 rxf = 1.4;
-rxr = -1.6;
+rxr = -0.5;
 ryf = 0.90;
 rz =  0.70;
 CR = -0.05;
@@ -40,7 +40,7 @@ pinvH = pinv(H);
 FzW = pinvH*(rz/2*rho*S*v0^2*[0; Cyb*sin(beta0); -Cx0*cos(beta0)]+[m*g*cos(theta); -rz*m*v0*w0*cos(beta0); -rz*m*g*sin(theta)-rz*m*v0*w0*sin(beta0)]);
 
 
-REF=[rho, S, v0, CR, Cx0 ];
+REF = [rho, S, v0, CR, Cx0 ];
 f = @(x)long_eq(x,REF,FzW); 
 
 lambda0s = fsolve(f,0); %0.0061 @130, 0.0208 @270
@@ -56,18 +56,18 @@ A = [A11 A12
     A21 A22];
 B1 = Cf*[1/m;
       rxf/Iz];
-B1_Ctrl = ryf/Iz*[zeros(1,4);
-             FzW.*[-Partial_mu_long(1,lambda0s) Partial_mu_long(1,lambda0s) Partial_mu_long(1,0) -Partial_mu_long(1,0)]];
+B1_Ctrl = [zeros(1,4) Cr*(1/m);
+             (FzW.').*[(ryf/Iz)*(-Partial_mu_long(1,lambda0s)) (ryf/Iz)*(Partial_mu_long(1,lambda0s)) (ryf/Iz)*(Partial_mu_long(1,0)) (ryf/Iz)*(-Partial_mu_long(1,0))] Cr*(rxr/Iz)];
 B2eq = [0; 1/Iz];
 
 C1 = [0 1]; % [-] measured output
 y0 = w0; % [rad/s] linearisation output
 
-s = (Cf*rxf+Cr*rxr)/(Cf+Cr);
+s = (Cf*rxf + Cr*rxr)/(Cf + Cr);
 
-eta=-m*g*(Cf*rxf+Cr*rxr)/(Cf*Cr*(rxf-rxr));
+eta = -m*g*(Cf*rxf + Cr*rxr)/(Cf*Cr*(rxf-rxr));
 
-crit_Speed=sqrt(g*(rxf-rxr)/abs(eta));
+crit_Speed = sqrt(g*(rxf-rxr)/abs(eta));
 
 if s > 0
     disp('OVERSTEERED VEHICLE')
@@ -79,7 +79,42 @@ else
     disp('NEUTRAL STEERED VEHICLE')
 end
 
-%% Longitudinal equilibrium
+disp(['eta = ',num2str(eta)])
+disp(['Critical Speed = ',num2str(crit_Speed*3.6),' km/h'])
+
+%% REACHABILITY
+
+B_eq = [0 Cr/m
+    1/Iz Cr*(rxf/Iz)];
+R = [B_eq A*B_eq];
+
+if rank(R) == 2
+    disp('FULLY REACHABLE')
+else
+    disp('NOT FULLY REACHABLE')
+end
+
+%% OBSERVABILITY
+
+O = [C1
+    C1*A];
+
+if rank(O) == 2
+    disp('FULLY OBSERVABLE')
+else
+    disp('NOT FULLY OBSERVABLE')
+end
+
+%% CONTROL
+
+Kr = [1 1
+    1 1];
+
+de_tau = [B1_Ctrl(2,1) B1_Ctrl(2,2) B1_Ctrl(2,3) B1_Ctrl(2,4)];
+pinv_de_tau = pinv(de_tau);
+
+
+%% LONGITUDINAL EQUILIBRIUM
 
 function f = long_eq(x,REF,FzW)
 
@@ -91,7 +126,7 @@ f = 1/2*REF(1)*REF(2)*REF(3)^2*REF(5)+FzW.'*[mu_long(kind,x)+REF(4)
                                              REF(4)];
 end
 
-%% Mu
+%% MU
 
 function mu = mu_long(i,lambda)
 
