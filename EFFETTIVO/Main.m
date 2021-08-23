@@ -18,7 +18,7 @@ rz =  0.70;
 CR = -0.05;
 Iz = 1200*(rxr^2+ryf^2)^2;
 
-delta = 0*[1 1 0 0]/180*pi; % 3.5 // 10
+deltaFront = 0*[1 1 0 0]/180*pi; % 3.5 // 10
 
 rx = [rxf rxf rxr rxr];
 ry = [ryf -ryf -ryf ryf];
@@ -62,6 +62,7 @@ B2eq = [0; 1/Iz];
 
 C1 = [0 1]; % [-] measured output
 y0 = w0; % [rad/s] linearisation output
+C2 = C1; % temporary
 
 s = (Cf*rxf + Cr*rxr)/(Cf + Cr);
 
