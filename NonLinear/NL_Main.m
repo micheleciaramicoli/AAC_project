@@ -18,8 +18,6 @@ rz =  0.70;
 CR = -0.05;
 Iz = 1200*(rxr^2+ryf^2)^2;
 
-delta = 0*[1 1 0 0]/180*pi; % 3.5 // 10
-delta_f = delta(1);
 
 rx = [rxf rxf rxr rxr];
 ry = [ryf -ryf -ryf ryf];
@@ -33,10 +31,11 @@ x0 = 0;
 y0 = 0;
 v0 = 130/3.6;   % [m/s] vehicle speed
 beta0 = 0;      % side-slip angle, 0 for the linearization trajectory (angolo tra vettore velocità e asse x riferito al body)
+v0x = v0*cos(beta0);
 w0 = 0;         % yaw angular speed
 psi0 = 0/180*pi; % yaw angle, 0 for the linearization trajactory
 theta = 0; % 15/180*pi road steepness
-delta_r0 = 0; % equilibrium rear wheels non steered
+delta_r0 = 0; % equilibrium rear wheels = non steered
 
 % questo per trovare le forze verticali sulle 4 ruote (N1234);
 % calcolate sempre rispetto ai valori 
