@@ -4,25 +4,28 @@ clear all
 
 %% PARAMETERS
 
-g = 9.81; % [m/s^2] gravity acceleration
-rho = 1.225; % [kg/m^3] air density
-S = 2.4; % [m^2] cross surface
-Cx0 = -0.3; % [-] drag coefficient (IN THE NOTES ONLY Cd ON X AXIS)
-Cyb = -0.3; % [-] drag coefficient
-rk = 1; % dry asphalt
-m = 1200; % [kg] vehicle mass
+g = 9.81;       % [m/s^2] gravity acceleration
+rho = 1.225;    % [kg/m^3] air density
+S = 2.4;        % [m^2] cross surface
+Cx0 = - 0.3;    % [-] drag coefficient (IN THE NOTES ONLY Cd ON X AXIS)
+Cyb = - 0.3;    % [-] drag coefficient
+Cd = - 0.3;
+rk = 1;         % dry asphalt
+m = 1200;       % [kg] vehicle mass
 rxf = 1.4;
-rxr = -0.4;
+rxr = 0.4;
 ryf = 0.90;
 rz =  0.70;
-CR = -0.05;
+CR = 0;
 Iz = 1200*(rxr^2 + ryf^2)^2;
 
 rx = [rxf rxf rxr rxr];
 ry = [ryf -ryf -ryf ryf];
-H = [ones(1,4); %3x4
-    ry;
-    -rx];
+
+H =   [1   1    1    1;
+     -rxf -rxf  rxr  rxr;
+      ryf -ryf -ryf ryf];
+
 
 %% EQUILIBRIUM POINT (linearization trajectory)
 
@@ -38,11 +41,13 @@ delta_r0 = 0;           % equilibrium rear wheels = non steered
 
 % questo per trovare le forze verticali sulle 4 ruote (N1234);
 % calcolate sempre rispetto ai valori 
-pinvH = pinv(H); %pseudoinverse will be 4x3
-FzW = pinvH*(rz/2*rho*S*v0^2*[0; Cyb*sin(beta0); -Cx0*cos(beta0)] + [m*g*cos(theta); -rz*m*v0*w0*cos(beta0); -rz*m*g*sin(theta)-rz*m*v0*w0*sin(beta0)]);
+
+pinvH = pinv(H);        %pseudoinverse will be 4x3
+
+FzW = pinvH*[m*g; rz/2*rho*S*v0^2*Cd; 0];
 
 REF = [rho, S, v0, CR, Cx0];
-f = @(x)long_eq(x,REF,FzW); 
+f = @(x)long_eq(x,REF,FzW);
 
 lambda0s = fsolve(f,0); %0.0061 @130, 0.0208 @270
 lambda0 = [lambda0s; lambda0s; 0; 0]; 
@@ -51,23 +56,21 @@ u0 = [lambda0; delta_r0];
 
 Cf = (FzW(1)+FzW(2))*Partial_mu_long(1,0);
 Cr = (FzW(3)+FzW(4))*Partial_mu_long(1,0);
-s = (Cf*rxf + Cr*rxr)/(Cf + Cr);
 
-eta = -m*g*(Cf*rxf + Cr*rxr)/(Cf*Cr*(rxf-rxr));
+eta = - m*g*(Cf*rxf - Cr*rxr)/(Cf*Cr*(rxf+rxr));
 
-crit_Speed = sqrt(g*(rxf-rxr)/abs(eta));
+crit_Speed = sqrt(g*(rxf + rxr)/abs(eta));
 
-if s > 0
+if eta < 0
     disp('OVERSTEERED VEHICLE')
-    disp(['s = ',num2str(s),' m'])
-elseif s < 0
+    disp(['eta = ',num2str(eta),' m'])
+elseif eta > 0
     disp('UNDERSTEERED VEHICLE')
-    disp(['s = ',num2str(s),' m'])
+    disp(['eta = ',num2str(eta),' m'])
 else
     disp('NEUTRAL STEERED VEHICLE')
 end
 
-disp(['eta = ',num2str(eta)])
 disp(['Critical Speed = ',num2str(crit_Speed*3.6),' km/h'])
 
 
