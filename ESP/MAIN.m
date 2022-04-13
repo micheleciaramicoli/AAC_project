@@ -6,6 +6,9 @@ close all
 
 %% VARIABLES INPUT
 
+global g rho Cx Cy rk v
+global r_x r_y r_z S m J CR
+
 g   = 9.81;                   % [m/s^2] gravity acceleration
 rho = 1.225;                  % [kg/m^3] air density
 Cx  = 0.3;                    % drag coefficient 
@@ -24,21 +27,25 @@ CR = -0.05;                 % coefficiente attrito resistenza delle ruote
 
 %% EQUATIONS
 
-omega           = 1;
+omega           = 0;
 beta_body       = 0;
 v_x_body        = v * cos(beta_body);    % speed of the body in the x direction
 v_y_body        = v * sin(beta_body);    % speed of the body in the y direction
+delta_w0        = [0 0 0 0];        % steering angles
+
 N               = m*g;
 
 H               = [ ones(1,4)
-                     r_x
+                    -r_x
                      r_y   ];
 
 N_wheels        = pinv(H) * [        N
                                0.5*rho*(v^2)*S*Cx*r_z
                                       0                ];
 
-delta_w         = [1 1 0 0];        % steering angles
+lambdas0        = ;
+
+
 v_x_wheels      = [1 1 1 1];        % speed of the wheels        
 v_y_wheels      = [1 1 1 1];        % speed of the wheels    
 tau             = [1 1 1 1];        % torques
@@ -57,7 +64,7 @@ for i = 1:4
     v_x_wheels(i)   = V_wheels(1);
     v_y_wheels(i)   = V_wheels(2);
 
-    betas_wheels(i) = atan (v_y_wheels(i)/v_x_wheels(i));
+    betas_wheels(i) = atan(v_y_wheels(i)/v_x_wheels(i));
 
     V_wheels        = [0;0];         % Reset value of V_wheels
 end
